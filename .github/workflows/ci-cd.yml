@@ -26,15 +26,16 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
-      - name: Create AWS Lambda Function
-        id: create-lambda
+      - name: Check if Lambda Function Exists
+        id: lambda-check
         run: |
-          aws lambda create-function --function-name HandlerString --runtime java17 --handler integration.ninjas.HandlerString::handleRequest --role arn:aws:iam::730335608470:role/githubactions_role --zip-file fileb://target/lambda-basic-1.0-SNAPSHOT.jar
+          aws lambda get-function --function-name HandlerString > /dev/null 2>&1 || echo "FunctionNotFound"
         continue-on-error: true
 
-      - name: Delay for 5 seconds
-        run: sleep 5
-
-      - name: Update Lambda Function
-        if: steps.create-lambda.outcome == 'success'
-        run: aws lambda update-function-code --function-name HandlerString --zip-file fileb://target/lambda-basic-1.0-SNAPSHOT.jar
+      - name: Create or Update AWS Lambda Function
+        run: |
+          if [ "${{ steps.lambda-check.outputs.run }}" == "FunctionNotFound" ]; then
+            aws lambda create-function --function-name HandlerString --runtime java17 --handler integration.ninjas.HandlerString::handleRequest --role arn:aws:iam::730335608470:role/githubactions_role --zip-file fileb://target/lambda-basic-1.0-SNAPSHOT.jar
+          else
+            aws lambda update-function-code --function-name HandlerString --zip-file fileb://target/lambda-basic-1.0-SNAPSHOT.jar
+          fi
