@@ -29,8 +29,5 @@ jobs:
       - name: Create or Update AWS Lambda Function
         run: |
           aws lambda create-function --function-name HandlerString --runtime java17 --handler integration.ninjas.HandlerString::handleRequest --role arn:aws:iam::730335608470:role/githubactions_role --zip-file fileb://target/lambda-basic-1.0-SNAPSHOT.jar --cli-connect-timeout 10 || true
+          sleep 5
           aws lambda update-function-code --function-name HandlerString --zip-file fileb://target/lambda-basic-1.0-SNAPSHOT.jar
-
-      - name: Update Lambda Function    
-        if: steps.create-lambda.outcome == 'success'
-        run: aws lambda update-function-code --function-name HandlerString --zip-file fileb://target/lambda-basic-1.0-SNAPSHOT.jar
